@@ -12,10 +12,12 @@ namespace Tetris_AI
 {
     public partial class TetrisView : UserControl
     {
-
+        TetrisProcessor processor;
 
         public TetrisView()
         {
+            processor = new TetrisProcessor();
+
             InitializeComponent();
         }
 
