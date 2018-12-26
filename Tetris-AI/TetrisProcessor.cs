@@ -20,7 +20,7 @@
             int offset = MinDistanceToField(newPiece, col);
 
             /* Insert the piece grid into the playing grid. */
-            Grid.InsertGrid(newPiece.Grid, offset, col);
+            Grid.InsertGrid(newPiece, offset, col);
 
             /* Update the grid. */
             Grid.ClearFullRows();
@@ -30,13 +30,13 @@
         private int MinDistanceToField(TetrisPiece tetrisPiece, int col)
         {
             /* Get the first distance from piece to field. */
-            int minDistance = Grid.DistanceToFirstBlock(tetrisPiece.Grid.LowestBlockPosition(0), col);
+            int minDistance = Grid.DistanceToFirstBlock(tetrisPiece.LowestBlockPosition(0), col);
 
             /* Compare remaining distances. */
             for (int i = 1; i < tetrisPiece.Size; i++)
             {
                 /* Get distance. */
-                int distance = Grid.DistanceToFirstBlock(tetrisPiece.Grid.LowestBlockPosition(i), col + i);
+                int distance = Grid.DistanceToFirstBlock(tetrisPiece.LowestBlockPosition(i), col + i);
 
                 /* Select smallest distance.*/
                 if (minDistance > distance)

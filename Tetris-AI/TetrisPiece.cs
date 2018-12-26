@@ -1,15 +1,11 @@
 ﻿namespace Tetris_AI
 {
-    public class TetrisPiece
+    public class TetrisPiece : Grid
     {
-        /* Grid used to store block locations in row major order.
-         * 0 = no block, 1 = block in that position*/
-        public Grid Grid { get; }
         public int Size { get; }
 
-        public TetrisPiece(Grid grid)
+        public TetrisPiece(Grid grid) : base(grid.Array, grid.Width)
         {
-            Grid = grid;
             Size = grid.Width;
         }
 
@@ -18,15 +14,10 @@
         {
             return new TetrisPiece[4] {
                 this,
-                new TetrisPiece(Grid.Rotate90Deg()),
-                new TetrisPiece(Grid.Rotate180Deg()),
-                new TetrisPiece(Grid.Rotate270Deg())
+                new TetrisPiece(Rotate90Deg()),
+                new TetrisPiece(Rotate180Deg()),
+                new TetrisPiece(Rotate270Deg())
             };
-        }
-
-        public bool GetBlock(int row, int col)
-        {
-            return Grid.GetBlock(row, col);
         }
     }
 
