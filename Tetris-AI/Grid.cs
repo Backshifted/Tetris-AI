@@ -4,7 +4,7 @@
     public class Grid
     {
         /* An array to store the grid in a row major order. */
-        public bool[] Array { get; }
+        public bool[] Array { get; set; }
 
         public int Width { get; }
         public int Height { get; }
@@ -73,7 +73,7 @@
                     return i;
             }
 
-            return -1;
+            return -100;
         }
 
         /* Calculates the distance from the given position first block from the bottom up. */
@@ -125,15 +125,27 @@
         public void ClearFullRows()
         {
             int emptyRows = 0;
+            int rowsLeft = 4;
+            bool rowCleared = false;
 
-            /* Scan until a non-empty row is found. */
-            for (int i = 0; i < Height; i++)
+            /* Scan until a non-empty row is found. 
+             * Or until 4 rows have been scanned since clearing a row,
+             * as no more than 4 consecutive rows can be cleared at once. */
+            for (int i = 0; i < Height && rowsLeft > 0; i++)
             {
                 if(RowEmpty(i))
                     emptyRows++;
-                
-                if(RowFull(i))
+
+                if (RowFull(i))
+                {
                     ClearRow(i, emptyRows++);
+                    /* Start counting down the rows left to scan. */
+                    rowCleared = true;
+                }
+
+                /* Count down the rows left to scan. */
+                if (rowCleared)
+                    rowsLeft--;
             }
         }
 
@@ -144,6 +156,18 @@
                 for (int j = 0; j < grid.Width && col + j < Width; j++)
                 {
                     ORBlock(row + i, col + j, grid.GetBlock(i, j));
+                }
+            }
+        }
+
+        public void DeleteGrid(Grid grid, int row, int col)
+        {
+            for (int i = 0; i < grid.Height && row + i < Height; i++)
+            {
+                for (int j = 0; j < grid.Width && col + j < Width; j++)
+                {
+                    if (grid.GetBlock(i, j))
+                        SetBlock(row + i, col + j, false);
                 }
             }
         }

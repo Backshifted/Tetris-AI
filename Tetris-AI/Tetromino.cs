@@ -1,29 +1,52 @@
 ﻿namespace Tetris_AI
 {
-    public class TetrisPiece : Grid
+    public class Tetromino : Grid
     {
-        public int Size { get; }
+        /* Since tetromino grids are always a square
+         * only 1 length is required. */
+        public int Size { get { return Width; } }
 
-        public TetrisPiece(Grid grid) : base(grid.Array, grid.Width)
-        {
-            Size = grid.Width;
-        }
+        public Tetromino(Grid grid) : base(grid.Array, grid.Width) { }
 
         /* Return all rotations of the current piece in clock-wise order. */
-        public TetrisPiece[] getRotations()
+        public Tetromino[] GetRotations()
         {
-            return new TetrisPiece[4] {
+            return new Tetromino[4] {
                 this,
-                new TetrisPiece(Rotate90Deg()),
-                new TetrisPiece(Rotate180Deg()),
-                new TetrisPiece(Rotate270Deg())
+                new Tetromino(base.Rotate90Deg()),
+                new Tetromino(base.Rotate180Deg()),
+                new Tetromino(base.Rotate270Deg())
             };
+        }
+
+        /* Rotate the piece by 90 degrees. */
+        public new void Rotate90Deg()
+        {
+            Array = base.Rotate90Deg().Array;
+        }
+
+        /* Rotate the piece by 180 degrees. */
+        public new void Rotate180Deg()
+        {
+            Array = base.Rotate180Deg().Array;
+        }
+
+        /* Rotate the piece by 270 degrees. */
+        public new void Rotate270Deg()
+        {
+            Array = base.Rotate270Deg().Array;
+        }
+
+        /* Returns all available tetrominoes. */
+        public static Tetromino[] All()
+        {
+            return new Tetromino[] { new IPiece(), new JPiece(), new LPiece(), new TPiece(), new SPiece(), new ZPiece(), new OPiece() };
         }
     }
 
-    public class LongPiece : TetrisPiece
+    public class IPiece : Tetromino
     {
-        public LongPiece() :
+        public IPiece() :
             base(new Grid(new bool[] {
                 false, false, false, false,
                 true, true, true, true,
@@ -33,7 +56,7 @@
         { }
     }
 
-    public class JPiece : TetrisPiece
+    public class JPiece : Tetromino
     {
         public JPiece() :
             base(new Grid(new bool[] {
@@ -44,7 +67,7 @@
         { }
     }
 
-    public class LPiece : TetrisPiece
+    public class LPiece : Tetromino
     {
         public LPiece() :
             base(new Grid(new bool[] {
@@ -55,7 +78,7 @@
         { }
     }
 
-    public class TPiece : TetrisPiece
+    public class TPiece : Tetromino
     {
         public TPiece() :
             base(new Grid(new bool[] {
@@ -66,7 +89,7 @@
         { }
     }
 
-    public class SPiece : TetrisPiece
+    public class SPiece : Tetromino
     {
         public SPiece() :
             base(new Grid(new bool[] {
@@ -77,7 +100,7 @@
         { }
     }
 
-    public class ZPiece : TetrisPiece
+    public class ZPiece : Tetromino
     {
         public ZPiece() :
             base(new Grid(new bool[] {
@@ -88,9 +111,9 @@
         { }
     }
 
-    public class SquarePiece : TetrisPiece
+    public class OPiece : Tetromino
     {
-        public SquarePiece() :
+        public OPiece() :
             base(new Grid(new bool[] {
                 true, true,
                 true, true,

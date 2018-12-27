@@ -35,7 +35,8 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Name = "TetrisView";
-            this.Size = new System.Drawing.Size(200, 440);
+            this.Size = new System.Drawing.Size(300, 660);
+            this.PreviewKeyDown += new System.Windows.Forms.PreviewKeyDownEventHandler(this.TetrisView_PreviewKeyDown);
             this.ResumeLayout(false);
 
         }

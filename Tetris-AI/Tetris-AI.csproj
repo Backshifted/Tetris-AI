@@ -50,7 +50,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Grid.cs" />
-    <Compile Include="TetrisPiece.cs" />
+    <Compile Include="RandomGenerator.cs" />
+    <Compile Include="Tetromino.cs" />
     <Compile Include="TetrisProcessor.cs" />
     <Compile Include="TetrisView.cs">
       <SubType>UserControl</SubType>
