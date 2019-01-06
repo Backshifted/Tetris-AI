@@ -10,12 +10,25 @@
         public Grid Grid;
 
         /* The look-ahead piece that will be selected after the current piece has been placed. */
-        private Tetromino NextPiece;
+        public Tetromino LookAheadPiece { get; private set; }
         /* Piece hovering in the top of the grid. */
-        private Tetromino previewPiece;
+        public Tetromino CurrentPiece { get; private set; }
         /* Top left corner of the preview piece in the grid. */
-        private int previewPieceColumn;
-        private int previewPieceRow;
+        public int CurrentPieceColumn { get; private set; }
+        public int CurrentPieceRow { get; private set; }
+
+        /* Determines whether there is a bot move to draw. */
+        public bool BotMove { get; set; }
+        /* Tetromino the bot is currently working with. */
+        public Tetromino BotPiece { get; set; }
+        /* Coordinates of the bot tetromino. */
+        public int BotMoveColumn { get; set; }
+        public int BotMoveRow { get; set; }
+        /* Look ahead tetromino the bot is currently working with. */
+        public Tetromino BotLookAheadPiece { get; set; }
+        /* Coordinates of the bot look ahead tetromino. */
+        public int BotLookAheadMoveColumn { get; set; }
+        public int BotLookAheadMoveRow { get; set; }
 
         /* Tetromino generator used for obtaining the next piece. */
         private RandomGenerator RGN;
@@ -27,6 +40,9 @@
         /* Event raised when a new piece is selected. */
         public event EventHandler NewPieceEvent;
 
+        /* The amount of lines cleared in the current grid. */
+        public int LinesCleared { get; private set; }
+
         public TetrisProcessor()
         {
             /* Initialize grid. */
@@ -34,22 +50,10 @@
 
             /* Initialize generator and get first piece. */
             RGN = new RandomGenerator();
-            NextPiece = RGN.Next();
+            LookAheadPiece = RGN.Next();
 
             /* Update grid. */
             RaiseUpdateEvent();
-        }
-
-        private void RaiseUpdateEvent()
-        {
-            if (GridUpdateEvent != null)
-                GridUpdateEvent.Invoke();
-        }
-
-        private void RaiseNewPieceEvent()
-        {
-            if (NewPieceEvent != null)
-                NewPieceEvent.Invoke();
         }
 
         /* Adds a piece to the tetris grid. */
@@ -60,12 +64,12 @@
 
             /* Insert the piece grid into the playing grid. */
             Grid.InsertGrid(piece, offset, col);
-
+            
             /* Update grid as a new piece had been placed. */
             RaiseUpdateEvent();
 
             /* Update the grid. */
-            Grid.ClearFullRows();
+            LinesCleared += Grid.ClearFullRows();
 
             /* Update grid as rows might have been cleared. */
             RaiseUpdateEvent();
@@ -77,16 +81,16 @@
         public void RotatePreviewPiece(int direction)
         {
             /* Remove the current preview piece. */
-            Grid.DeleteGrid(previewPiece, previewPieceRow, previewPieceColumn);
+            Grid.DeleteGrid(CurrentPiece, CurrentPieceRow, CurrentPieceColumn);
 
             /* Rotate preview piece. */
             if (direction == 1)
-                previewPiece.Rotate90Deg();
+                CurrentPiece.Rotate90Deg();
             else
-                previewPiece.Rotate270Deg();
+                CurrentPiece.Rotate270Deg();
 
             /* Preview rotated piece. */
-            PreviewPiece(previewPiece, CalculatePreviewRowOffset(previewPiece), previewPieceColumn);
+            PreviewPiece(CurrentPiece, CalculatePreviewRowOffset(CurrentPiece), CurrentPieceColumn);
         }
 
         /* Moves the preview piece along the grid.
@@ -95,11 +99,11 @@
         public void MovePreviewPiece(int amount)
         {
             /* Remove the current preview piece from the grid. */
-            Grid.DeleteGrid(previewPiece, previewPieceRow, previewPieceColumn);
+            Grid.DeleteGrid(CurrentPiece, CurrentPieceRow, CurrentPieceColumn);
             /* Update preview piece location. */
-            previewPieceColumn += amount;
+            CurrentPieceColumn += amount;
             /* Insert the updated preview piece. */
-            PreviewPiece(previewPiece, previewPieceRow, previewPieceColumn);
+            PreviewPiece(CurrentPiece, CurrentPieceRow, CurrentPieceColumn);
         }
 
         /* Sets the next tetromino as the current preview piece,
@@ -107,9 +111,9 @@
         public void PreviewNextPiece()
         {
             /* Preview next piece. */
-            PreviewPiece(NextPiece, CalculatePreviewRowOffset(NextPiece), CalculatePreviewColumnOffset(NextPiece));
+            PreviewPiece(LookAheadPiece, CalculatePreviewRowOffset(LookAheadPiece), CalculatePreviewColumnOffset(LookAheadPiece));
             /* Get next piece. */
-            NextPiece = RGN.Next();
+            LookAheadPiece = RGN.Next();
 
             /* New piece has been previewed. */
             RaiseNewPieceEvent();
@@ -123,9 +127,9 @@
             Grid.InsertGrid(piece, row, col);
 
             /* Update preview piece variables. */
-            previewPiece = piece;
-            previewPieceRow = row;
-            previewPieceColumn = col;
+            CurrentPiece = piece;
+            CurrentPieceRow = row;
+            CurrentPieceColumn = col;
 
             /* Grid has been updated by adding a preview piece. */
             RaiseUpdateEvent();
@@ -135,9 +139,9 @@
         public void PlacePreviewPiece()
         {
             /* Remove the current preview piece from the grid. */
-            Grid.DeleteGrid(previewPiece, previewPieceRow, previewPieceColumn);
+            Grid.DeleteGrid(CurrentPiece, CurrentPieceRow, CurrentPieceColumn);
             /* Insert the piece in the correct row. */
-            AddPiece(previewPiece, previewPieceColumn);
+            AddPiece(CurrentPiece, CurrentPieceColumn);
             /* Preview the next piece. */
             PreviewNextPiece();
         }
@@ -146,13 +150,13 @@
         private int MinDistanceToField(Tetromino piece, int col)
         {
             /* Get the first distance from piece to field. */
-            int minDistance = Grid.DistanceToFirstBlock(piece.LowestBlockPosition(0), col);
+            int minDistance = Grid.DistanceToFirstBlock(piece.LowestBlockRow(0), col);
 
             /* Compare remaining distances. */
-            for (int i = 1; i < piece.Size; i++)
+            for (int i = 1; i < piece.Width; i++)
             {
                 /* Get distance. */
-                int distance = Grid.DistanceToFirstBlock(piece.LowestBlockPosition(i), col + i);
+                int distance = Grid.DistanceToFirstBlock(piece.LowestBlockRow(i), col + i);
 
                 /* Select smallest distance.*/
                 if (minDistance > distance)
@@ -170,9 +174,9 @@
             int row = -1;
 
             /* Loop through the entire grid or until a block has been found. */
-            for (int i = 0; i < piece.Size && row == -1; i++)
+            for (int i = 0; i < piece.Width && row == -1; i++)
             {
-                for (int j = 0; j < piece.Size; j++)
+                for (int j = 0; j < piece.Width; j++)
                 {
                     if (piece.GetBlock(i, j))
                     {
@@ -189,7 +193,21 @@
          * to the right to be in the center of the grid. */
         private int CalculatePreviewColumnOffset(Tetromino piece)
         {
-            return (GRID_WIDTH - piece.Size) / 2;
+            return (GRID_WIDTH - piece.Width) / 2;
+        }
+        
+        /* Raised when there is an update in the grid. */
+        public void RaiseUpdateEvent()
+        {
+            if (GridUpdateEvent != null)
+                GridUpdateEvent.Invoke();
+        }
+
+        /* Raised when a new piece is selected. */
+        private void RaiseNewPieceEvent()
+        {
+            if (NewPieceEvent != null)
+                NewPieceEvent.Invoke();
         }
     }
 }

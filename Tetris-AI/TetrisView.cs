@@ -1,4 +1,5 @@
 ﻿using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 
 namespace Tetris_AI
@@ -7,8 +8,10 @@ namespace Tetris_AI
     {
         public readonly int DefaultBlockSize = 30;
         public readonly int DefaultBorderWidth = 2;
-        public new readonly Color DefaultBackColor = Color.Gainsboro;
+        public new readonly Color DefaultBackColor = Color.WhiteSmoke;
         public readonly Color DefaultBlockColor = Color.Aqua;
+        public readonly Color DefaultBotBlockColor = Color.ForestGreen;
+        public readonly Color DefaultBotLookAheadBlockColor = Color.Maroon;
         public readonly Color DefaultBorderColor = Color.DarkGray;
 
         /* The block size determines the size of the block and the component itself. */
@@ -32,6 +35,30 @@ namespace Tetris_AI
             {
                 ForeColor = value;
                 BlockBrush = new SolidBrush(value);
+            }
+        }
+
+        /* Color the bot's best move tetromino will be drawn with. */
+        private Color botBlockColor;
+        public Color BotBlockColor
+        {
+            get { return botBlockColor; }
+            set
+            {
+                botBlockColor = value;
+                BotBlockBrush = new SolidBrush(value);
+            }
+        }
+
+        /* Color the bot's best move look ahead tetromino will be drawn with. */
+        private Color botLookAheadBlockColor;
+        public Color BotLookAheadBlockColor
+        {
+            get { return botLookAheadBlockColor; }
+            set
+            {
+                botLookAheadBlockColor = value;
+                BotLookAheadBlockBrush = new SolidBrush(value);
             }
         }
 
@@ -82,9 +109,12 @@ namespace Tetris_AI
 
         /* Brushes & pens used to draw the tetris field with. */
         private SolidBrush BlockBrush;
+        private SolidBrush BotBlockBrush;
+        private SolidBrush BotLookAheadBlockBrush;
         private Pen BorderPen;
 
         public TetrisProcessor Processor { get; set; }
+        public TetrisBot Bot { get; private set; }
 
         public TetrisView()
         {
@@ -106,6 +136,8 @@ namespace Tetris_AI
             if (Processor == null)
                 Processor = new TetrisProcessor();
 
+            Bot = new TetrisBot(Processor);
+
             /* Prevent flickering by double buffering the user control. */
             DoubleBuffered = true;
 
@@ -115,6 +147,8 @@ namespace Tetris_AI
 
             BackColor = DefaultBackColor;
             BlockColor = DefaultBlockColor;
+            BotBlockColor = DefaultBotBlockColor;
+            BotLookAheadBlockColor = DefaultBotLookAheadBlockColor;
             BorderColor = DefaultBorderColor;
             BorderWidth = DefaultBorderWidth;
             
@@ -143,8 +177,13 @@ namespace Tetris_AI
             }
             else
             {
+                /* Smooth drawing for text. */
+                e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+
                 PaintBlocks(e.Graphics);
+                PaintBestTetrominoes(e.Graphics);
                 PaintShading(e.Graphics);
+                PaintLinesCleared(e.Graphics);
                 PaintBorder(e.Graphics);
             }
         }
@@ -161,7 +200,53 @@ namespace Tetris_AI
                     if (Processor.Grid.GetBlock(row, col))
                     {
                         Rectangle r = new Rectangle(col * BlockSize, row * BlockSize, BlockSize, BlockSize);
+                        /* Fill block. */
                         graphics.FillRectangle(BlockBrush, r);
+                        /* Draw block border. */
+                        graphics.DrawRectangle(BorderPen, r);
+                    }
+                }
+            }
+        }
+
+        private void PaintBestTetrominoes(Graphics graphics)
+        {
+            if (!Processor.BotMove || Processor.BotPiece == null)
+                return;
+
+            /* Paint all the blocks in the grid with their borders. */
+            for (int row = 0; row < Processor.BotPiece.Width; row++)
+            {
+                for (int col = 0; col < Processor.BotPiece.Width; col++)
+                {
+                    /* Only paint blocks if there is a tetromino there. */
+                    if (Processor.BotPiece.GetBlock(row, col))
+                    {
+                        Rectangle r = new Rectangle((col + Processor.BotMoveColumn) * BlockSize, 
+                            (row + Processor.BotMoveRow) * BlockSize, BlockSize, BlockSize);
+                        /* Fill block. */
+                        graphics.FillRectangle(BotBlockBrush, r);
+                        /* Draw block border. */
+                        graphics.DrawRectangle(BorderPen, r);
+                    }
+                }
+            }
+
+            if (Processor.BotLookAheadPiece == null)
+                return;
+
+            /* Paint all the blocks in the grid with their borders. */
+            for (int row = 0; row < Processor.BotLookAheadPiece.Width; row++)
+            {
+                for (int col = 0; col < Processor.BotLookAheadPiece.Width; col++)
+                {
+                    /* Only paint blocks if there is a tetromino there. */
+                    if (Processor.BotLookAheadPiece.GetBlock(row, col))
+                    {
+                        Rectangle r = new Rectangle((col + Processor.BotLookAheadMoveColumn) * BlockSize, 
+                            (row + Processor.BotLookAheadMoveRow) * BlockSize, BlockSize, BlockSize);
+                        /* Fill block. */
+                        graphics.FillRectangle(BotLookAheadBlockBrush, r);
                         /* Draw block border. */
                         graphics.DrawRectangle(BorderPen, r);
                     }
@@ -173,6 +258,17 @@ namespace Tetris_AI
         private void PaintShading(Graphics graphics)
         {
             graphics.FillRectangle(new SolidBrush(Color.FromArgb(100, 0, 0, 0)), 0, 0, Width, BlockSize * 2);
+        }
+
+        /* Paints a string with the current line clear count. */
+        private void PaintLinesCleared(Graphics graphics)
+        {
+            GraphicsPath path = new GraphicsPath();
+            path.AddString("Lines:" + Processor.LinesCleared, new FontFamily("Consolas"), 1, 24, new Point(2, 5), new StringFormat());
+
+            /* Create white text with a black outline*/
+            graphics.FillPath(Brushes.White, path);
+            graphics.DrawPath(Pens.Black, path);
         }
 
         /* Paints the border of the user control. */
@@ -190,25 +286,37 @@ namespace Tetris_AI
         /* Handles key input to the user control. */
         private void TetrisView_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e)
         {
-            if (e.KeyData == Keys.Left)
+            /* Do not allow input when the bot is playing. */
+            if (!Bot.Enabled)
             {
-                Processor.MovePreviewPiece(-1);
+                if (e.KeyData == Keys.Left)
+                {
+                    Processor.MovePreviewPiece(-1);
+                }
+                else if (e.KeyData == Keys.Right)
+                {
+                    Processor.MovePreviewPiece(1);
+                }
+                else if (e.KeyData == Keys.Z)
+                {
+                    Processor.RotatePreviewPiece(-1);
+                }
+                else if (e.KeyData == Keys.X)
+                {
+                    Processor.RotatePreviewPiece(1);
+                }
+                else if (e.KeyData == Keys.Space)
+                {
+                    Processor.PlacePreviewPiece();
+                }
             }
-            else if (e.KeyData == Keys.Right)
+
+            if (e.KeyData == Keys.B)
             {
-                Processor.MovePreviewPiece(1);
-            }
-            else if (e.KeyData == Keys.Z)
-            {
-                Processor.RotatePreviewPiece(-1);   
-            }
-            else if (e.KeyData == Keys.X)
-            {
-                Processor.RotatePreviewPiece(1);
-            }
-            else if (e.KeyData == Keys.Space)
-            {
-                Processor.PlacePreviewPiece();
+                if (Bot.Enabled)
+                    Bot.Stop();
+                else
+                    Bot.Start();
             }
         }
     }

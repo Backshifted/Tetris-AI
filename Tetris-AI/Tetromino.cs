@@ -2,21 +2,17 @@
 {
     public class Tetromino : Grid
     {
-        /* Since tetromino grids are always a square
-         * only 1 length is required. */
-        public int Size { get { return Width; } }
+        /* The amount of asymmetrical rotations of a tetromino. */
+        public int UniqueRotations { get; private set; }
 
-        public Tetromino(Grid grid) : base(grid.Array, grid.Width) { }
-
-        /* Return all rotations of the current piece in clock-wise order. */
-        public Tetromino[] GetRotations()
+        public Tetromino(Grid grid, int uniqueRotations) : base(grid.Array, grid.Width)
         {
-            return new Tetromino[4] {
-                this,
-                new Tetromino(base.Rotate90Deg()),
-                new Tetromino(base.Rotate180Deg()),
-                new Tetromino(base.Rotate270Deg())
-            };
+            UniqueRotations = uniqueRotations;
+        }
+        
+        public new Tetromino Clone()
+        {
+            return new Tetromino(base.Clone(), UniqueRotations);
         }
 
         /* Rotate the piece by 90 degrees. */
@@ -52,72 +48,60 @@
                 true, true, true, true,
                 false, false, false, false,
                 false, false, false, false
-            }, 4))
+            }, 4), 2)
         { }
     }
 
     public class JPiece : Tetromino
     {
-        public JPiece() :
-            base(new Grid(new bool[] {
-                true, false, false,
-                true, true, true,
-                false, false, false,
-            }, 3))
-        { }
+        public JPiece() : base(new Grid(new bool[] {
+            true, false, false,
+            true, true, true,
+            false, false, false
+        }, 3), 4) { }
     }
 
     public class LPiece : Tetromino
     {
-        public LPiece() :
-            base(new Grid(new bool[] {
-                false, false, true,
-                true, true, true,
-                false, false, false,
-            }, 3))
-        { }
+        public LPiece() : base(new Grid(new bool[] {
+            false, false, true,
+            true, true, true,
+            false, false, false,
+        }, 3), 4) { }
     }
 
     public class TPiece : Tetromino
     {
-        public TPiece() :
-            base(new Grid(new bool[] {
-                false, true, false,
-                true, true, true,
-                false, false, false,
-            }, 3))
-        { }
+        public TPiece() : base(new Grid(new bool[] {
+            false, true, false,
+            true, true, true,
+            false, false, false,
+        }, 3), 4) { }
     }
 
     public class SPiece : Tetromino
     {
-        public SPiece() :
-            base(new Grid(new bool[] {
-                false, true, true,
-                true, true, false,
-                false, false, false,
-            }, 3))
-        { }
+        public SPiece() : base(new Grid(new bool[] {
+            false, true, true,
+            true, true, false,
+            false, false, false,
+        }, 3), 2) { }
     }
 
     public class ZPiece : Tetromino
     {
-        public ZPiece() :
-            base(new Grid(new bool[] {
-                true, true, false,
-                false, true, true,
-                false, false, false,
-            }, 3))
-        { }
+        public ZPiece() : base(new Grid(new bool[] {
+            true, true, false,
+            false, true, true,
+            false, false, false,
+        }, 3), 2) { }
     }
 
     public class OPiece : Tetromino
     {
-        public OPiece() :
-            base(new Grid(new bool[] {
-                true, true,
-                true, true,
-            }, 2))
-        { }
+        public OPiece() : base(new Grid(new bool[] {
+            true, true,
+            true, true,
+        }, 2), 1) { }
     }
 }

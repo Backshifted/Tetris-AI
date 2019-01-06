@@ -57,6 +57,7 @@
             this.Name = "TetrisViewForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Tetris View";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.TetrisViewForm_FormClosing);
             this.ResumeLayout(false);
 
         }

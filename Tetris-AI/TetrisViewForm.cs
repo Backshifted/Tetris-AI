@@ -18,5 +18,10 @@ namespace Tetris_AI
             tetrisView1.InitView();
             tetrisView1.Select();
         }
+
+        private void TetrisViewForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            tetrisView1.Bot.Stop();
+        }
     }
 }

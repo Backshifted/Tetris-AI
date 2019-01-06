@@ -33,7 +33,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject />
+    <StartupObject>Tetris_AI.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -51,6 +51,7 @@
   <ItemGroup>
     <Compile Include="Grid.cs" />
     <Compile Include="RandomGenerator.cs" />
+    <Compile Include="TetrisBot.cs" />
     <Compile Include="Tetromino.cs" />
     <Compile Include="TetrisProcessor.cs" />
     <Compile Include="TetrisView.cs">
