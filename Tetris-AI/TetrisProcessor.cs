@@ -42,6 +42,8 @@
 
         /* The amount of lines cleared in the current grid. */
         public int LinesCleared { get; private set; }
+        /* The amount of quadruple line clears in the current grid. */
+        public int Tetrisses { get; private set; }
 
         public TetrisProcessor()
         {
@@ -60,7 +62,7 @@
         public void AddPiece(Tetromino piece, int col)
         {
             /* The offset determines how far from the top the piece must be placed. */
-            int offset = MinDistanceToField(piece, col);
+            int offset = DistanceToField(piece, col);
 
             /* Insert the piece grid into the playing grid. */
             Grid.InsertGrid(piece, offset, col);
@@ -69,7 +71,11 @@
             RaiseUpdateEvent();
 
             /* Update the grid. */
-            LinesCleared += Grid.ClearFullRows();
+            int linesCleared = Grid.ClearFullRows();
+            LinesCleared += linesCleared;
+
+            if (linesCleared == 4)
+                Tetrisses++;
 
             /* Update grid as rows might have been cleared. */
             RaiseUpdateEvent();
@@ -147,7 +153,7 @@
         }
 
         /* Calculates the smallest distance from the tetromino to the playing field. */
-        private int MinDistanceToField(Tetromino piece, int col)
+        private int DistanceToField(Tetromino piece, int col)
         {
             /* Get the first distance from piece to field. */
             int minDistance = Grid.DistanceToFirstBlock(piece.LowestBlockRow(0), col);

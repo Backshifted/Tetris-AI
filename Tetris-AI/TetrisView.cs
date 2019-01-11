@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 
@@ -183,7 +184,7 @@ namespace Tetris_AI
                 PaintBlocks(e.Graphics);
                 PaintBestTetrominoes(e.Graphics);
                 PaintShading(e.Graphics);
-                PaintLinesCleared(e.Graphics);
+                PaintStats(e.Graphics);
                 PaintBorder(e.Graphics);
             }
         }
@@ -261,10 +262,14 @@ namespace Tetris_AI
         }
 
         /* Paints a string with the current line clear count. */
-        private void PaintLinesCleared(Graphics graphics)
+        private void PaintStats(Graphics graphics)
         {
+            double tetrisPercentage = Processor.Tetrisses == 0 ? 0 : Math.Round(Processor.Tetrisses * 4.0 / Processor.LinesCleared * 100, 2);
+
             GraphicsPath path = new GraphicsPath();
             path.AddString("Lines:" + Processor.LinesCleared, new FontFamily("Consolas"), 1, 24, new Point(2, 5), new StringFormat());
+            path.AddString("Tetrisses:" + Processor.Tetrisses, new FontFamily("Consolas"), 1, 24, new Point(2, 30), new StringFormat());
+            path.AddString("Percentage:" + tetrisPercentage + "%", new FontFamily("Consolas"), 1, 24, new Point(2, 55), new StringFormat());
 
             /* Create white text with a black outline*/
             graphics.FillPath(Brushes.White, path);
